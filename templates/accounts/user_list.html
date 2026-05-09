@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block crumb %}Users{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div><h1>Users</h1><p>People who can access Cluster Audit.</p></div>
+  <a class="btn btn-primary" href="{% url 'accounts:user_create' %}"><i class="bi bi-plus-lg"></i> Add User</a>
+</div>
+<div class="card"><div class="table-wrap"><table class="table-clean">
+  <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Status</th></tr></thead>
+  <tbody>
+    {% for u in users %}
+    <tr>
+      <td><div class="flex gap-2" style="align-items:center"><span class="avatar">{{ u.full_name|slice:":1"|upper }}</span> <strong>{{ u.full_name }}</strong></div></td>
+      <td>{{ u.email }}</td>
+      <td><span class="badge badge-brand">{{ u.get_role_display }}</span></td>
+      <td>{% if u.is_active %}<span class="badge badge-success badge-dot">Active</span>{% else %}<span class="badge badge-neutral badge-dot">Disabled</span>{% endif %}</td>
+    </tr>
+    {% endfor %}
+  </tbody>
+</table></div></div>
+{% endblock %}

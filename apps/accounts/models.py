@@ -1,0 +1,65 @@
+from __future__ import annotations
+
+import uuid
+
+from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin
+from django.db import models
+from django.utils import timezone
+from django.utils.translation import gettext_lazy as _
+
+from .managers import UserManager
+
+
+class Role(models.TextChoices):
+    ADMIN = "ADMIN", _("Admin / HQ")
+    CLUSTER_MANAGER = "CLUSTER_MANAGER", _("Cluster Manager")
+    STORE_MANAGER = "STORE_MANAGER", _("Store Manager")
+    OWNER = "OWNER", _("Action Owner")
+
+
+class User(AbstractBaseUser, PermissionsMixin):
+    """Email-as-username user with role-based access."""
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    email = models.EmailField(_("email address"), unique=True)
+    full_name = models.CharField(max_length=150)
+    phone = models.CharField(max_length=20, blank=True)
+    role = models.CharField(
+        max_length=32,
+        choices=Role.choices,
+        default=Role.STORE_MANAGER,
+        db_index=True,
+    )
+
+    is_active = models.BooleanField(default=True)
+    is_staff = models.BooleanField(default=False)
+    date_joined = models.DateTimeField(default=timezone.now)
+
+    objects = UserManager()
+
+    USERNAME_FIELD = "email"
+    REQUIRED_FIELDS = ["full_name"]
+
+    class Meta:
+        ordering = ("full_name",)
+        verbose_name = "User"
+        verbose_name_plural = "Users"
+
+    def __str__(self) -> str:
+        return f"{self.full_name} <{self.email}>"
+
+    # Convenience role helpers ------------------------------------------------
+    @property
+    def is_admin_role(self) -> bool:
+        return self.role == Role.ADMIN or self.is_superuser
+
+    @property
+    def is_cluster_manager(self) -> bool:
+        return self.role == Role.CLUSTER_MANAGER
+
+    @property
+    def is_store_manager(self) -> bool:
+        return self.role == Role.STORE_MANAGER
+
+    def get_short_name(self) -> str:
+        return self.full_name.split(" ")[0] if self.full_name else self.email

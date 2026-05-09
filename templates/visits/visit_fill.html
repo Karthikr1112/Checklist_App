@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block title %}Daily Update · {{ visit.store.code }}{% endblock %}
+{% block crumb %}<a href="{% url 'visits:visit_list' %}">Visits</a> <i class="bi bi-chevron-right"></i> <a href="{% url 'visits:visit_detail' visit.pk %}">{{ visit.store.code }}</a> <i class="bi bi-chevron-right"></i> Edit{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <h1>Daily Update — {{ visit.store.code }} · {{ visit.store.name }}</h1>
+    <p>{{ visit.visit_date|date:"d M Y" }} · {{ visit.get_audit_type_display }}</p>
+  </div>
+  <a class="btn btn-secondary" href="{% url 'visits:visit_detail' visit.pk %}"><i class="bi bi-arrow-left"></i> Back to summary</a>
+</div>
+
+<div class="alert alert-info">
+  <i class="bi bi-lightbulb"></i>
+  <div>Pick <strong>Yes / No / NA</strong> per question. Add observations (Work Done Today / Blockers) and attach photos where useful. Compliance is auto-calculated.</div>
+</div>
+
+{% for section, items in grouped.items %}
+<div class="card">
+  <div class="card-header">{{ section.name }} <span class="badge badge-neutral">{{ items|length }}</span></div>
+  <div>
+    {% for r in items %}
+    <div class="q-row">
+      <div class="flex" style="justify-content:space-between;align-items:flex-start;gap:12px">
+        <div class="flex-1">
+          <span class="q-code-pill">{{ r.question.code }}</span>
+          <div class="q-text">{{ r.question.text }}</div>
+          {% if r.question.evidence_hint %}<div class="q-evidence"><i class="bi bi-rulers"></i> {{ r.question.evidence_hint }}</div>{% endif %}
+        </div>
+      </div>
+
+      <form method="post" action="{% url 'visits:response_save' r.pk %}" class="flex gap-2 mt-3" style="flex-wrap:wrap;align-items:center">
+        {% csrf_token %}
+        <select name="response" class="form-select form-select-sm" style="max-width:130px">
+          <option value="">— Select —</option>
+          <option value="YES" {% if r.response == 'YES' %}selected{% endif %}>✓ Yes</option>
+          <option value="NO"  {% if r.response == 'NO'  %}selected{% endif %}>✗ No</option>
+          <option value="NA"  {% if r.response == 'NA'  %}selected{% endif %}>NA</option>
+        </select>
+        <input name="observation" type="text" class="form-control form-control-sm" style="flex:1;min-width:240px"
+               placeholder="Work Done Today / Blockers / Observation" value="{{ r.observation }}">
+        <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Save</button>
+      </form>
+
+      {% if r.photos.all %}
+      <div class="flex gap-2 mt-3" style="flex-wrap:wrap">
+        {% for p in r.photos.all %}
+          <a href="{{ p.image.url }}" target="_blank"><img src="{{ p.image.url }}" class="thumb" alt=""></a>
+        {% endfor %}
+      </div>
+      {% endif %}
+
+      <details class="mt-3">
+        <summary class="muted" style="font-size:12.5px;cursor:pointer">
+          <i class="bi bi-paperclip"></i> Attach photo / Create action
+        </summary>
+        <form method="post" enctype="multipart/form-data" action="{% url 'visits:response_photo_upload' r.pk %}" class="flex gap-2 mt-2" style="flex-wrap:wrap">
+          {% csrf_token %}
+          <input type="file" name="image" accept="image/*" capture="environment" class="form-control form-control-sm" style="flex:1;min-width:200px">
+          <input type="text" name="caption" placeholder="Caption (optional)" class="form-control form-control-sm" style="flex:1;min-width:160px">
+          <button class="btn btn-secondary btn-sm"><i class="bi bi-upload"></i> Upload</button>
+        </form>
+        <a class="btn btn-warning btn-sm mt-2" href="{% url 'actions:action_create' r.pk %}"><i class="bi bi-plus-lg"></i> Create Action</a>
+      </details>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+{% endfor %}
+
+<form method="post" action="{% url 'visits:visit_submit' visit.pk %}" class="mt-4">
+  {% csrf_token %}
+  <button class="btn btn-success btn-lg btn-block"><i class="bi bi-send-check"></i> Submit Visit for Review</button>
+</form>
+{% endblock %}

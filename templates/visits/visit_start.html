@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Start Visit{% endblock %}
+{% block crumb %}<a href="{% url 'visits:visit_list' %}">Visits</a> <i class="bi bi-chevron-right"></i> Start{% endblock %}
+{% block content %}
+<div class="page-header">
+  <div>
+    <h1>Start a New Visit</h1>
+    <p>Create a daily-update record for a store.</p>
+  </div>
+</div>
+<div class="card" style="max-width:560px">
+  <div class="card-body">
+    <form method="post">
+      {% csrf_token %}
+      {% for field in form %}
+        <div class="form-group">
+          <label class="form-label">{{ field.label }}</label>
+          {{ field }}
+          {% if field.errors %}<div class="form-error">{{ field.errors|striptags }}</div>{% endif %}
+        </div>
+      {% endfor %}
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-primary"><i class="bi bi-play-fill"></i> Start Visit</button>
+        <a href="{% url 'visits:visit_list' %}" class="btn btn-ghost">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
