@@ -24,7 +24,7 @@ def visit_list(request):
     return render(request, "visits/visit_list.html", {"visits": visits})
 
 
-@role_required(Role.ADMIN, Role.CLUSTER_MANAGER)
+@role_required(Role.ADMIN, Role.CLUSTER_MANAGER, Role.INVENTORY_TEAM)
 def visit_start(request):
     if request.method == "POST":
         form = StartVisitForm(request.POST, user=request.user)

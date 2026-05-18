@@ -14,4 +14,6 @@ def stores_visible_to(user: User) -> QuerySet[Store]:
         return qs.filter(cluster_manager=user)
     if user.is_store_manager:
         return qs.filter(store_manager=user)
+    if user.is_inventory_team:
+        return qs.filter(inventory_team=user)
     return qs.none()

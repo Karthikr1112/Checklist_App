@@ -14,6 +14,7 @@ class Role(models.TextChoices):
     ADMIN = "ADMIN", _("Admin / HQ")
     CLUSTER_MANAGER = "CLUSTER_MANAGER", _("Cluster Manager")
     STORE_MANAGER = "STORE_MANAGER", _("Store Manager")
+    INVENTORY_TEAM = "INVENTORY_TEAM", _("Inventory Team")
     OWNER = "OWNER", _("Action Owner")
 
 
@@ -60,6 +61,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_store_manager(self) -> bool:
         return self.role == Role.STORE_MANAGER
+
+    @property
+    def is_inventory_team(self) -> bool:
+        return self.role == Role.INVENTORY_TEAM
 
     def get_short_name(self) -> str:
         return self.full_name.split(" ")[0] if self.full_name else self.email

@@ -15,9 +15,20 @@ class StartVisitForm(forms.Form):
     def __init__(self, *args, user=None, **kwargs):
         super().__init__(*args, **kwargs)
         if user is not None and not user.is_admin_role:
-            self.fields["store"].queryset = self.fields["store"].queryset.filter(
-                cluster_manager=user
-            )
+            if user.is_inventory_team:
+                self.fields["store"].queryset = self.fields["store"].queryset.filter(
+                    inventory_team=user
+                )
+                self.fields["template"].queryset = self.fields["template"].queryset.filter(
+                    audience=ChecklistTemplate.Audience.INVENTORY_TEAM
+                )
+            else:
+                self.fields["store"].queryset = self.fields["store"].queryset.filter(
+                    cluster_manager=user
+                )
+                self.fields["template"].queryset = self.fields["template"].queryset.filter(
+                    audience=ChecklistTemplate.Audience.CLUSTER_MANAGER
+                )
 
 
 class VisitResponseForm(forms.ModelForm):

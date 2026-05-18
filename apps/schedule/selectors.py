@@ -13,6 +13,8 @@ def plans_visible_to(user):
         return qs
     if user.role == Role.CLUSTER_MANAGER:
         return qs.filter(cluster_manager=user)
+    if user.role == Role.INVENTORY_TEAM:
+        return qs.filter(cluster_manager=user)
     if user.role == Role.STORE_MANAGER:
         return qs.filter(store__store_manager=user)
     return qs.filter(Q(cluster_manager=user) | Q(store__store_manager=user))

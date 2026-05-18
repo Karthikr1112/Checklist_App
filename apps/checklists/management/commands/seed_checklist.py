@@ -62,8 +62,15 @@ class Command(BaseCommand):
         template, created = ChecklistTemplate.objects.get_or_create(
             name=TEMPLATE_NAME,
             version=TEMPLATE_VERSION,
-            defaults={"is_active": True, "description": "Seeded from Cluster_Manager_Checklist_V1.xlsx"},
+            defaults={
+                "is_active": True,
+                "description": "Seeded from Cluster_Manager_Checklist_V1.xlsx",
+                "audience": ChecklistTemplate.Audience.CLUSTER_MANAGER,
+            },
         )
+        if not created and template.audience != ChecklistTemplate.Audience.CLUSTER_MANAGER:
+            template.audience = ChecklistTemplate.Audience.CLUSTER_MANAGER
+            template.save(update_fields=["audience", "updated_at"])
         if created:
             self.stdout.write(self.style.SUCCESS(f"Created template {template}"))
         else:

@@ -27,6 +27,14 @@ class Store(BaseModel):
         related_name="managed_stores",
         limit_choices_to={"role": "STORE_MANAGER"},
     )
+    inventory_team = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="inventory_stores",
+        limit_choices_to={"role": "INVENTORY_TEAM"},
+    )
 
     class Meta:
         ordering = ("code",)

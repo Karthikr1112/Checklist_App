@@ -14,7 +14,13 @@ def start_visit_from_plan(*, plan: VisitPlan, user) -> VisitPlan:
     """Create a Visit linked to this plan and flip status to CHECKED_IN."""
     if plan.visit_id:
         return plan
-    template = ChecklistTemplate.objects.filter(is_active=True).order_by("-version").first()
+    templates = ChecklistTemplate.objects.filter(is_active=True)
+    if user is not None and not user.is_admin_role:
+        if user.is_inventory_team:
+            templates = templates.filter(audience=ChecklistTemplate.Audience.INVENTORY_TEAM)
+        else:
+            templates = templates.filter(audience=ChecklistTemplate.Audience.CLUSTER_MANAGER)
+    template = templates.order_by("-version").first()
     if template is None:
         raise ValueError("No active checklist template available.")
     visit = start_visit(

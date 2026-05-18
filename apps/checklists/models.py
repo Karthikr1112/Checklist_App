@@ -7,10 +7,22 @@ from apps.core.models import BaseModel
 class ChecklistTemplate(BaseModel):
     """A versioned set of sections + questions used by a Visit."""
 
+    class Audience(models.TextChoices):
+        CLUSTER_MANAGER = "CLUSTER_MANAGER", _("Cluster Manager")
+        INVENTORY_TEAM = "INVENTORY_TEAM", _("Inventory Team")
+        STORE_MANAGER = "STORE_MANAGER", _("Store Manager")
+
     name = models.CharField(max_length=120)
     version = models.PositiveSmallIntegerField(default=1)
     is_active = models.BooleanField(default=True, db_index=True)
     description = models.TextField(blank=True)
+    audience = models.CharField(
+        max_length=32,
+        choices=Audience.choices,
+        default=Audience.CLUSTER_MANAGER,
+        db_index=True,
+        help_text="Which role this checklist is intended for.",
+    )
 
     class Meta:
         ordering = ("-is_active", "name", "-version")

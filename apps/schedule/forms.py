@@ -32,17 +32,23 @@ class VisitPlanForm(forms.ModelForm):
         self.fields["audit_type"].choices = AuditType.choices
         self.fields["status"].choices = PlanStatus.choices
         self.fields["cluster_manager"].queryset = User.objects.filter(
-            is_active=True, role__in=[Role.CLUSTER_MANAGER, Role.ADMIN]
+            is_active=True,
+            role__in=[Role.CLUSTER_MANAGER, Role.ADMIN, Role.INVENTORY_TEAM],
         )
         self.fields["store"].queryset = Store.objects.filter(is_active=True)
         if user is not None and not user.is_admin_role:
-            # Cluster managers can only plan for themselves
+            # Non-admins can only plan for themselves
             self.fields["cluster_manager"].queryset = User.objects.filter(pk=user.pk)
             self.fields["cluster_manager"].initial = user
             self.fields["cluster_manager"].widget = forms.HiddenInput()
-            self.fields["store"].queryset = Store.objects.filter(
-                is_active=True, cluster_manager=user
-            )
+            if user.is_inventory_team:
+                self.fields["store"].queryset = Store.objects.filter(
+                    is_active=True, inventory_team=user
+                )
+            else:
+                self.fields["store"].queryset = Store.objects.filter(
+                    is_active=True, cluster_manager=user
+                )
 
     def clean(self):
         cleaned = super().clean()

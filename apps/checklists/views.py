@@ -7,12 +7,23 @@ from .models import ChecklistTemplate
 @login_required
 def template_list(request):
     templates = ChecklistTemplate.objects.prefetch_related("sections__questions")
+    user = request.user
+    if not user.is_admin_role:
+        if user.is_inventory_team:
+            templates = templates.filter(audience=ChecklistTemplate.Audience.INVENTORY_TEAM)
+        else:
+            templates = templates.filter(audience=ChecklistTemplate.Audience.CLUSTER_MANAGER)
     return render(request, "checklists/template_list.html", {"templates": templates})
 
 
 @login_required
 def template_detail(request, pk):
-    template = get_object_or_404(
-        ChecklistTemplate.objects.prefetch_related("sections__questions"), pk=pk
-    )
+    qs = ChecklistTemplate.objects.prefetch_related("sections__questions")
+    user = request.user
+    if not user.is_admin_role:
+        if user.is_inventory_team:
+            qs = qs.filter(audience=ChecklistTemplate.Audience.INVENTORY_TEAM)
+        else:
+            qs = qs.filter(audience=ChecklistTemplate.Audience.CLUSTER_MANAGER)
+    template = get_object_or_404(qs, pk=pk)
     return render(request, "checklists/template_detail.html", {"template": template})
