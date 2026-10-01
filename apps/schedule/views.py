@@ -55,6 +55,9 @@ def _serialize(plan: VisitPlan) -> dict:
             "visit_id": str(plan.visit_id) if plan.visit_id else None,
             "detail_url": reverse("schedule:plan_detail", args=[plan.id]),
             "edit_url":   reverse("schedule:plan_edit",   args=[plan.id]),
+            "start_visit_url": reverse("schedule:plan_start_visit", args=[plan.id]),
+            "reschedule_url": reverse("schedule:api_event_reschedule", args=[plan.id]),
+            "visit_url": reverse("visits:visit_detail", args=[plan.visit_id]) if plan.visit_id else None,
         },
     }
 

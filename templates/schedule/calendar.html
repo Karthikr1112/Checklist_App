@@ -177,7 +177,7 @@
 
   function reschedule(info) {
     const id = info.event.id;
-    fetch(`/schedule/api/events/${id}/reschedule/`, {
+    fetch(info.event.extendedProps.reschedule_url, {
       method: 'POST',
       credentials: 'same-origin',
       headers: { 'Content-Type': 'application/json', 'X-CSRFToken': getCookie('csrftoken') },
@@ -202,11 +202,11 @@
     const visitBtn = document.getElementById('m_visit');
     if (p.visit_id) {
       visitBtn.style.display = '';
-      visitBtn.href = `/visits/${p.visit_id}/`;
+      visitBtn.href = p.visit_url;
       startForm.style.display = 'none';
     } else if (p.status === 'PLANNED' || p.status === 'CHECKED_IN') {
       startForm.style.display = '';
-      startForm.action = `/schedule/${ev.id}/start-visit/`;
+      startForm.action = p.start_visit_url;
       visitBtn.style.display = 'none';
     } else {
       startForm.style.display = 'none';

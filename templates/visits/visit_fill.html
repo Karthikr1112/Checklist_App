@@ -30,17 +30,19 @@
         </div>
       </div>
 
-      <form method="post" action="{% url 'visits:response_save' r.pk %}" class="flex gap-2 mt-3" style="flex-wrap:wrap;align-items:center">
+      <form method="post" action="{% url 'visits:response_save' r.pk %}" class="flex gap-2 mt-3 js-autosave-form" style="flex-wrap:wrap;align-items:center" data-response-pk="{{ r.pk }}">
         {% csrf_token %}
-        <select name="response" class="form-select form-select-sm" style="max-width:130px">
+        <select name="response" class="form-select form-select-sm js-autosave-field" style="max-width:130px">
           <option value="">— Select —</option>
           <option value="YES" {% if r.response == 'YES' %}selected{% endif %}>✓ Yes</option>
           <option value="NO"  {% if r.response == 'NO'  %}selected{% endif %}>✗ No</option>
           <option value="NA"  {% if r.response == 'NA'  %}selected{% endif %}>NA</option>
         </select>
-        <input name="observation" type="text" class="form-control form-control-sm" style="flex:1;min-width:240px"
+        <input name="observation" type="text" class="form-control form-control-sm js-autosave-field" style="flex:1;min-width:240px"
                placeholder="Work Done Today / Blockers / Observation" value="{{ r.observation }}">
-        <button class="btn btn-primary btn-sm"><i class="bi bi-check2"></i> Save</button>
+        <span class="js-autosave-status muted" style="font-size:12px;min-width:80px">
+          <i class="bi bi-cloud-check"></i> Saved
+        </span>
       </form>
 
       {% if r.photos.all %}
@@ -73,4 +75,74 @@
   {% csrf_token %}
   <button class="btn btn-success btn-lg btn-block"><i class="bi bi-send-check"></i> Submit Visit for Review</button>
 </form>
+
+<script>
+(function () {
+  const TYPING_DEBOUNCE_MS = 700;
+
+  function setStatus(form, state) {
+    const el = form.querySelector('.js-autosave-status');
+    if (!el) return;
+    if (state === 'typing') {
+      el.innerHTML = '<i class="bi bi-pencil"></i> Editing…';
+      el.style.color = '';
+    } else if (state === 'saving') {
+      el.innerHTML = '<i class="bi bi-arrow-repeat"></i> Saving…';
+      el.style.color = '';
+    } else if (state === 'saved') {
+      el.innerHTML = '<i class="bi bi-cloud-check"></i> Saved';
+      el.style.color = '';
+    } else if (state === 'error') {
+      el.innerHTML = '<i class="bi bi-exclamation-triangle"></i> Error';
+      el.style.color = '#b00020';
+    }
+  }
+
+  async function submitForm(form) {
+    setStatus(form, 'saving');
+    const fd = new FormData(form);
+    try {
+      const res = await fetch(form.action, {
+        method: 'POST',
+        body: fd,
+        headers: { 'X-Requested-With': 'XMLHttpRequest' },
+        credentials: 'same-origin',
+      });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const data = await res.json();
+      if (!data.ok) throw new Error('save failed');
+      setStatus(form, 'saved');
+    } catch (err) {
+      console.error('autosave failed', err);
+      setStatus(form, 'error');
+    }
+  }
+
+  document.querySelectorAll('.js-autosave-form').forEach(function (form) {
+    let timer = null;
+    form.addEventListener('submit', function (e) { e.preventDefault(); });
+
+    form.querySelectorAll('.js-autosave-field').forEach(function (field) {
+      const isText = field.tagName === 'INPUT' || field.tagName === 'TEXTAREA';
+
+      field.addEventListener('change', function () {
+        clearTimeout(timer);
+        submitForm(form);
+      });
+
+      if (isText) {
+        field.addEventListener('input', function () {
+          setStatus(form, 'typing');
+          clearTimeout(timer);
+          timer = setTimeout(function () { submitForm(form); }, TYPING_DEBOUNCE_MS);
+        });
+        field.addEventListener('blur', function () {
+          clearTimeout(timer);
+          submitForm(form);
+        });
+      }
+    });
+  });
+})();
+</script>
 {% endblock %}

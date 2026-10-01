@@ -65,6 +65,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "apps.accounts.middleware.ApprovalRequiredMiddleware",
 ]
 
 ROOT_URLCONF = "config.urls"
@@ -97,10 +98,10 @@ TEMPLATES = [
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.mysql",
-        "NAME": env("DB_NAME", default="cluster_audit"),
-        "USER": env("DB_USER", default="root"),
+        "NAME": env("DB_NAME", default="checklist_db"),
+        "USER": env("DB_USER", default="checklist_user"),
         "PASSWORD": env("DB_PASSWORD", default=""),
-        "HOST": env("DB_HOST", default="127.0.0.1"),
+        "HOST": env("DB_HOST", default="192.168.229"),
         "PORT": env("DB_PORT", default="3306"),
         "OPTIONS": {
             "charset": "utf8mb4",
@@ -113,9 +114,17 @@ DATABASES = {
 # Auth
 # ---------------------------------------------------------------------------
 AUTH_USER_MODEL = "accounts.User"
-LOGIN_URL = "accounts:login"
-LOGIN_REDIRECT_URL = "dashboard:index"
-LOGOUT_REDIRECT_URL = "accounts:login"
+LOGIN_URL = "/cl/accounts/login/"
+LOGIN_REDIRECT_URL = "/cl/dashboard/"
+LOGOUT_REDIRECT_URL = "/cl/accounts/login/"
+
+AUTHENTICATION_BACKENDS = [
+    "apps.accounts.backends.StyleHRBackend",
+    "django.contrib.auth.backends.ModelBackend",
+]
+
+STYLEHR_API_URL = env("STYLEHR_API_URL", default="https://stylehr.in/api/login/")
+STYLEHR_API_TIMEOUT = env.int("STYLEHR_API_TIMEOUT", default=8)
 
 AUTH_PASSWORD_VALIDATORS = [
     {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},

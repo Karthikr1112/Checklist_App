@@ -1,21 +1,6 @@
-# Python
+env/
 __pycache__/
-*.py[cod]
-*.egg-info/
-.venv/
-venv/
-.env
-
-# Django
+*.pyc
 *.sqlite3
-/media/
-/staticfiles/
-/logs/
-
-# IDE
-.vscode/
-.idea/
-.DS_Store
-
-# Excel extracts
-_xlsx_extract/
+.env
+staticfiles/

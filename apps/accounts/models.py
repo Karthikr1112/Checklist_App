@@ -18,6 +18,17 @@ class Role(models.TextChoices):
     OWNER = "OWNER", _("Action Owner")
 
 
+class ApprovalStatus(models.TextChoices):
+    PENDING = "PENDING", _("Pending Approval")
+    APPROVED = "APPROVED", _("Approved")
+    REJECTED = "REJECTED", _("Rejected")
+
+
+class UserSource(models.TextChoices):
+    LOCAL = "LOCAL", _("Local")
+    STYLEHR = "STYLEHR", _("StyleHR")
+
+
 class User(AbstractBaseUser, PermissionsMixin):
     """Email-as-username user with role-based access."""
 
@@ -25,11 +36,32 @@ class User(AbstractBaseUser, PermissionsMixin):
     email = models.EmailField(_("email address"), unique=True)
     full_name = models.CharField(max_length=150)
     phone = models.CharField(max_length=20, blank=True)
+    employee_id = models.CharField(max_length=40, blank=True, db_index=True)
     role = models.CharField(
         max_length=32,
         choices=Role.choices,
         default=Role.STORE_MANAGER,
         db_index=True,
+    )
+    source = models.CharField(
+        max_length=16,
+        choices=UserSource.choices,
+        default=UserSource.LOCAL,
+        db_index=True,
+    )
+    approval_status = models.CharField(
+        max_length=16,
+        choices=ApprovalStatus.choices,
+        default=ApprovalStatus.APPROVED,
+        db_index=True,
+    )
+    approved_at = models.DateTimeField(null=True, blank=True)
+    approved_by = models.ForeignKey(
+        "self",
+        null=True,
+        blank=True,
+        on_delete=models.SET_NULL,
+        related_name="approved_users",
     )
 
     is_active = models.BooleanField(default=True)
@@ -65,6 +97,10 @@ class User(AbstractBaseUser, PermissionsMixin):
     @property
     def is_inventory_team(self) -> bool:
         return self.role == Role.INVENTORY_TEAM
+
+    @property
+    def is_approved(self) -> bool:
+        return self.approval_status == ApprovalStatus.APPROVED or self.is_superuser
 
     def get_short_name(self) -> str:
         return self.full_name.split(" ")[0] if self.full_name else self.email

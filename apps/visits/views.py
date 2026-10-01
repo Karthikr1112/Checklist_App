@@ -1,7 +1,8 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
-from django.http import HttpResponseForbidden
+from django.http import HttpResponseForbidden, JsonResponse
 from django.shortcuts import get_object_or_404, redirect, render
+from django.views.decorators.http import require_POST
 
 from apps.accounts.models import Role
 from apps.core.permissions import role_required
@@ -76,12 +77,13 @@ def visit_fill(request, pk):
 
 
 @login_required
+@require_POST
 def response_save(request, response_pk):
     response = get_object_or_404(VisitResponse.objects.select_related("visit"), pk=response_pk)
     if not _ensure_can_edit(request.user, response.visit):
         return HttpResponseForbidden()
-    if request.method != "POST":
-        return redirect("visits:visit_fill", pk=response.visit_id)
+
+    is_ajax = request.headers.get("x-requested-with") == "XMLHttpRequest"
 
     form = VisitResponseForm(request.POST, instance=response)
     if form.is_valid():
@@ -91,9 +93,21 @@ def response_save(request, response_pk):
             evidence={k: v for k, v in request.POST.items() if k.startswith("evidence__")},
             observation=form.cleaned_data["observation"],
         )
+        if is_ajax:
+            visit = response.visit
+            return JsonResponse({
+                "ok": True,
+                "response_pk": response.pk,
+                "compliance_pct": str(visit.compliance_pct),
+                "answered": visit.answered_count,
+                "total": visit.total_questions,
+            })
         messages.success(request, f"{response.question.code} saved.")
-    else:
-        messages.error(request, "Invalid response data.")
+        return redirect("visits:visit_fill", pk=response.visit_id)
+
+    if is_ajax:
+        return JsonResponse({"ok": False, "errors": form.errors}, status=400)
+    messages.error(request, "Invalid response data.")
     return redirect("visits:visit_fill", pk=response.visit_id)
 
 

@@ -1,6 +1,6 @@
 from .base import *  # noqa
 
-DEBUG = False
+DEBUG = True
 
 SECURE_HSTS_SECONDS = 60 * 60 * 24 * 30
 SECURE_HSTS_INCLUDE_SUBDOMAINS = True
@@ -12,4 +12,18 @@ SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
 X_FRAME_OPTIONS = "DENY"
 
-CSRF_TRUSTED_ORIGINS = env.list("CSRF_TRUSTED_ORIGINS", default=[])  # noqa: F405
+# IMPORTANT: Tell Django it's served under /fin
+FORCE_SCRIPT_NAME = "/cl"
+
+# Cookie paths
+SESSION_COOKIE_PATH = '/cl/'
+CSRF_COOKIE_PATH = '/cl/'
+
+# Unique cookie names
+SESSION_COOKIE_NAME = 'cl_sessionid'
+CSRF_COOKIE_NAME = 'cl_csrftoken'
+
+CSRF_TRUSTED_ORIGINS = [
+    "https://jeyarama.com",
+    "https://www.jeyarama.com",
+]
